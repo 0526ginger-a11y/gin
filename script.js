@@ -4,9 +4,18 @@
   const STORAGE_KEY = "portfolio-theme";
   const header = document.querySelector(".site-header");
   const navToggle = document.getElementById("nav-toggle");
-  const siteNav = document.getElementById("site-nav");
   const themeToggle = document.getElementById("theme-toggle");
   const yearEl = document.getElementById("year");
+  const searchForm = document.querySelector(".header-search");
+  const searchInput = document.getElementById("site-search");
+
+  const SEARCH_TARGETS = [
+    { id: "about", keywords: ["關於", "about", "背景", "專業", "理念"] },
+    { id: "projects", keywords: ["作品", "project", "專案", "官網", "儀表板"] },
+    { id: "skills", keywords: ["技能", "skill", "html", "css", "javascript", "python", "git", "figma"] },
+    { id: "experience", keywords: ["經歷", "experience", "競賽", "檢定", "黑客松"] },
+    { id: "footer", keywords: ["聯絡", "contact", "email", "github", "linkedin"] },
+  ];
 
   function getStoredTheme() {
     try {
@@ -25,18 +34,15 @@
   }
 
   function getPreferredTheme() {
-    if (window.matchMedia("(prefers-color-scheme: light)").matches) {
-      return "light";
-    }
-    return "dark";
+    return "light";
   }
 
   function applyTheme(theme) {
     const root = document.documentElement;
-    if (theme === "light") {
-      root.setAttribute("data-theme", "light");
+    if (theme === "dark") {
+      root.setAttribute("data-theme", "dark");
     } else {
-      root.removeAttribute("data-theme");
+      root.setAttribute("data-theme", "light");
     }
     if (themeToggle) {
       themeToggle.setAttribute(
@@ -53,8 +59,8 @@
   }
 
   function toggleTheme() {
-    const isLight = document.documentElement.getAttribute("data-theme") === "light";
-    const next = isLight ? "dark" : "light";
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+    const next = isDark ? "light" : "dark";
     applyTheme(next);
     setStoredTheme(next);
   }
@@ -115,6 +121,41 @@
     });
   }
 
+  function clearSearchHighlight() {
+    document.querySelectorAll(".search-highlight").forEach(function (el) {
+      el.classList.remove("search-highlight");
+    });
+  }
+
+  function initSearch() {
+    if (!searchForm || !searchInput) return;
+
+    searchForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const query = searchInput.value.trim().toLowerCase();
+      clearSearchHighlight();
+
+      if (!query) return;
+
+      const match = SEARCH_TARGETS.find(function (target) {
+        return target.keywords.some(function (keyword) {
+          return keyword.includes(query) || query.includes(keyword);
+        });
+      });
+
+      const section = document.getElementById(match ? match.id : "hero");
+      if (!section) return;
+
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+      section.classList.add("search-highlight");
+      closeNav();
+
+      window.setTimeout(function () {
+        section.classList.remove("search-highlight");
+      }, 2000);
+    });
+  }
+
   function initReveal() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       document.querySelectorAll(".reveal").forEach(function (el) {
@@ -135,7 +176,7 @@
           }
         });
       },
-      { root: null, rootMargin: "0px 0px -8% 0px", threshold: 0.1 }
+      { root: null, rootMargin: "0px 0px -6% 0px", threshold: 0.08 }
     );
 
     elements.forEach(function (el) {
@@ -156,6 +197,7 @@
     }
     initNavToggle();
     initSmoothScroll();
+    initSearch();
     initReveal();
     initYear();
   });
